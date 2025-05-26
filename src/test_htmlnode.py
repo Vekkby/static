@@ -13,7 +13,19 @@ class TestTextNode(unittest.TestCase):
         props = {'key': 'value', 'other_key': 'other_value'} 
         node = HTMLNode(props=props) 
 
-        self.assertEqual(node, 'key=value other_key=other_value')
+        self.assertEqual(node, ' key=value other_key=other_value')
+
+    def props_to_html_empty_dict(self):
+        props = {} 
+        node = HTMLNode(props=props) 
+
+        self.assertEqual(node, '')
+
+    def props_to_html_none_props(self): 
+        node = HTMLNode() 
+
+        self.assertEqual(node, '')
+
 
     def test_repr(self):
         tag = 'tag'
