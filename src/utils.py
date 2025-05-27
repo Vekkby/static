@@ -1,5 +1,6 @@
 from leafnode import LeafNode
 from textnode import TextNode, TextType
+import re
 
 
 def split_nodes_delimiter(old_nodes: list[TextNode], delimiter:str, text_type:TextType) -> list:
@@ -17,7 +18,7 @@ def split_nodes_delimiter(old_nodes: list[TextNode], delimiter:str, text_type:Te
                     result.append(TextNode(text, text_type))
         else:
             result.append(node)
-            
+
     return result
             
 
@@ -37,3 +38,16 @@ def text_node_to_html_node(node:TextNode) -> LeafNode:
                 return LeafNode('img', '', {'src': node.url, 'alt': node.text})
             
         raise ValueError('Wrong TextType')
+
+
+def extract_markdown_images(text) -> list[tuple[str, str]|None]:
+    images_reg = r"!\[([^\[\]]*)\]\(([^\(\)]*)\)"
+ 
+    return re.findall(images_reg, text)
+
+    
+
+def extract_markdown_links(text) -> list[tuple[str, str]|None]:
+    links_reg = r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
+
+    return re.findall(links_reg, text)
