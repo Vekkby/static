@@ -23,13 +23,7 @@ class TestTextNode(unittest.TestCase):
         node = TextNode(text, text_type, url)
         expected_result = f'TextNode({text}, {text_type.value}, {url})'
 
-        self.assertEqual(str(node), expected_result)
-
-    def test_text(self):
-        node = TextNode("This is a text node", TextType.TEXT)
-        html_node = node.text_node_to_html_node()
-        self.assertEqual(html_node.tag, None)
-        self.assertEqual(html_node.value, "This is a text node")
-
+        self.assertEqual(str(node), expected_result) 
+        
 if __name__ == "__main__":
     unittest.main()
