@@ -55,24 +55,34 @@ def extract_markdown_links(text:str) -> list[tuple[str, str]|None]:
 def split_images_links(old_nodes, pattern, text_type, extraction_function):
     result = []
 
-    for node in old_nodes:
+    for node in old_nodes: 
         if node.text_type == TextType.TEXT:
             matches:list[tuple[str, str] | None] = extraction_function(node.text)
+
+            if matches == []:
+                result.append(node)
+                continue
+
             text_string:str = node.text
 
             for match in matches:
-                delimiter = pattern.format(match[0],match[1])
+                delimiter = pattern.format(match[0], match[1])
                 split = text_string.split(delimiter, 1)
 
                 if split[0] != '':
                     result.append(TextNode(split[0], TextType.TEXT))
 
+
                 result.append(TextNode(match[0], text_type, match[1]))
 
                 if len(split) == 1:
+                    text_string = ''
                     continue
 
                 text_string = split[1]
+
+            if text_string != '':
+                result.append(TextNode(text_string, TextType.TEXT))
         else:
             result.append(node)
 
@@ -87,3 +97,12 @@ def split_nodes_link(old_nodes):
     return split_images_links(old_nodes, "[{0}]({1})", TextType.LINK, extract_markdown_links)
 
 
+def text_to_textnodes(text:str) -> list[TextNode | None]:
+    result = [TextNode(text, TextType.TEXT)] 
+    result = split_nodes_image(result) 
+    result = split_nodes_link(result) 
+    result = split_nodes_delimiter(result, '`', TextType.CODE)
+    result = split_nodes_delimiter(result, '**', TextType.BOLD)
+    result = split_nodes_delimiter(result, '_', TextType.ITALIC)
+
+    return result
