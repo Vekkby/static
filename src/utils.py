@@ -2,7 +2,6 @@ from leafnode import LeafNode
 from textnode import TextNode, TextType
 import re
 
-
 def split_nodes_delimiter(old_nodes: list[TextNode], delimiter:str, text_type:TextType) -> list:
     result = []
 
@@ -40,14 +39,51 @@ def text_node_to_html_node(node:TextNode) -> LeafNode:
         raise ValueError('Wrong TextType')
 
 
-def extract_markdown_images(text) -> list[tuple[str, str]|None]:
+def extract_markdown_images(text) -> list[tuple[str, str]|None]: 
     images_reg = r"!\[([^\[\]]*)\]\(([^\(\)]*)\)"
- 
+    
     return re.findall(images_reg, text)
 
     
 
-def extract_markdown_links(text) -> list[tuple[str, str]|None]:
+def extract_markdown_links(text:str) -> list[tuple[str, str]|None]:
     links_reg = r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
 
     return re.findall(links_reg, text)
+
+
+def split_images_links(old_nodes, pattern, text_type, extraction_function):
+    result = []
+
+    for node in old_nodes:
+        if node.text_type == TextType.TEXT:
+            matches:list[tuple[str, str] | None] = extraction_function(node.text)
+            text_string:str = node.text
+
+            for match in matches:
+                delimiter = pattern.format(match[0],match[1])
+                split = text_string.split(delimiter, 1)
+
+                if split[0] != '':
+                    result.append(TextNode(split[0], TextType.TEXT))
+
+                result.append(TextNode(match[0], text_type, match[1]))
+
+                if len(split) == 1:
+                    continue
+
+                text_string = split[1]
+        else:
+            result.append(node)
+
+    return result
+
+
+def split_nodes_image(old_nodes): 
+    return split_images_links(old_nodes, "![{0}]({1})", TextType.IMAGE, extract_markdown_images)
+  
+
+def split_nodes_link(old_nodes):
+    return split_images_links(old_nodes, "[{0}]({1})", TextType.LINK, extract_markdown_links)
+
+
