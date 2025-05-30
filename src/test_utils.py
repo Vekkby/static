@@ -145,5 +145,54 @@ class TestUtils(unittest.TestCase):
         actual = text_to_textnodes(text) 
         self.assertEqual(result, actual)
 
+
+    def test_markdown_to_blocks(self):
+        md = """
+This is **bolded** paragraph
+
+This is another paragraph with _italic_ text and `code` here
+This is the same paragraph on a new line
+
+- This is a list
+- with items
+"""
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "This is **bolded** paragraph",
+                "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line",
+                "- This is a list\n- with items",
+            ],
+        )
+
+    def test_heading(self):
+        self.assertEqual(block_to_block_type("# Heading 1"), BlockType.HEADING)
+        self.assertEqual(block_to_block_type("###### Final Level"), BlockType.HEADING)
+
+    def test_code_block(self):
+        block = '```print("Hello")```'
+        self.assertEqual(block_to_block_type(block), BlockType.CODE)
+
+    def test_quote_block(self):
+        block = "> This is a quote\n> Second line"
+        self.assertEqual(block_to_block_type(block), BlockType.QUOTE)
+
+    def test_unordered_list(self):
+        block = "- Item 1\n- Item 2\n- Item 3"
+        self.assertEqual(block_to_block_type(block), BlockType.UNORDERED_LIST)
+
+    def test_ordered_list(self):
+        block = "1. First\n2. Second\n3. Third"
+        self.assertEqual(block_to_block_type(block), BlockType.ORDERED_LIST)
+
+    def test_broken_ordered_list(self):
+        block = "1. First\n3. Second"
+        self.assertEqual(block_to_block_type(block), BlockType.PARAGRAPH)  # fails sequence
+
+    def test_paragraph(self):
+        block = "This is a simple paragraph.\nWith two lines."
+        self.assertEqual(block_to_block_type(block), BlockType.PARAGRAPH)
+
 if __name__ == "__main__":
     unittest.main()

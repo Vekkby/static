@@ -1,6 +1,7 @@
 from leafnode import LeafNode
 from textnode import TextNode, TextType
 import re
+from enum import Enum
 
 def split_nodes_delimiter(old_nodes: list[TextNode], delimiter:str, text_type:TextType) -> list:
     result = []
@@ -106,3 +107,51 @@ def text_to_textnodes(text:str) -> list[TextNode | None]:
     result = split_nodes_delimiter(result, '_', TextType.ITALIC)
 
     return result
+
+
+def markdown_to_blocks(markdown:str) -> list:
+    result = markdown.split("\n\n")
+
+    if result in [[], ['']]:
+        return []
+    
+    result = list(filter(lambda block: block != '', map(lambda block: block.strip(), result))) 
+
+    return result
+
+class BlockType(Enum):
+    PARAGRAPH = 'paragraph'
+    HEADING = 'heading'
+    CODE = 'code'
+    QUOTE = 'quote'
+    UNORDERED_LIST = 'unordered_list'
+    ORDERED_LIST = 'ordered_list'
+    
+    
+def block_to_block_type(block:str) -> BlockType:
+    if re.match(r"^(#{1,6})\s+(.*)$", block):
+        return BlockType.HEADING
+    if re.match(r"^```.*?```$", block):
+        return BlockType.CODE
+    if re.match(r"^>", block):
+        return BlockType.QUOTE
+    if all(map(lambda line: bool(re.match(r"- ", line)), block.split("\n"))):
+        return BlockType.UNORDERED_LIST
+    
+    numbers_list = [re.match(r"[0-9]+\. ", line) for line in block.split("\n")]
+    if all(numbers_list):
+        casted_numbers = list(map(lambda match: float(match.group(0)), numbers_list))
+         
+        if len(casted_numbers) == 1:
+            return BlockType.ORDERED_LIST
+        
+        for pair in zip(casted_numbers[:-1], casted_numbers[1:]):
+            if not pair[1] - pair[0] == 1:
+                return BlockType.PARAGRAPH
+        
+        return BlockType.ORDERED_LIST
+        
+
+    
+    return BlockType.PARAGRAPH
+    
