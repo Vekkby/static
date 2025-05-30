@@ -2,7 +2,7 @@ from leafnode import LeafNode
 from textnode import TextNode, TextType
 from htmlnode import HTMLNode
 from parentnode import ParentNode
-import re
+import re, os
 from enum import Enum
 
 def split_nodes_delimiter(old_nodes: list[TextNode], delimiter:str, text_type:TextType) -> list:
@@ -182,7 +182,7 @@ def block_to_node(pair:(str, BlockType)) -> HTMLNode:
             return LeafNode(f'h{len(header)}', text)
         case BlockType.UNORDERED_LIST:
             items = [item[2:] for item in pair[0].splitlines()]
-            return ParentNode('ul', [LeafNode('li', item) for item in items])
+            return ParentNode('ul', [LeafNode('li', (item)) for item in items])
         case BlockType.ORDERED_LIST:
             items = [re.sub(r"^[0-9]+\.\s", '', item) for item in pair[0].splitlines()]
 
@@ -194,3 +194,11 @@ def block_to_node(pair:(str, BlockType)) -> HTMLNode:
 def normalize_text(text:str) -> str:
     return ' '.join([line.strip() for line in text.strip().splitlines()])
 
+
+def extract_title(markdown):
+    lines = markdown.splitlines()
+    for line in lines:
+        if re.match(r"^#\s", line):
+            return line[1:].strip()
+
+    raise ValueError('No h1 header') 

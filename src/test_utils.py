@@ -313,6 +313,14 @@ the **same** even with inline stuff
             "<div><ol><li>First item</li><li>Second item</li><li>Third item</li><li>Fourth item</li></ol></div>",
         ) 
  
+    def test_title(self):
+        md = '# Hello '
+        title = extract_title(md)
+        self.assertEqual('Hello', title)
+
+    def test_no_title(self):
+        md = '## Hello'
+        self.assertRaises(ValueError, extract_title, md) 
 
 if __name__ == "__main__":
     unittest.main()
