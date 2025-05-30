@@ -1,5 +1,7 @@
 from leafnode import LeafNode
 from textnode import TextNode, TextType
+from htmlnode import HTMLNode
+from parentnode import ParentNode
 import re
 from enum import Enum
 
@@ -131,13 +133,13 @@ class BlockType(Enum):
 def block_to_block_type(block:str) -> BlockType:
     if re.match(r"^(#{1,6})\s+(.*)$", block):
         return BlockType.HEADING
-    if re.match(r"^```.*?```$", block):
+    if re.match(r"^```[\s\S]*?```$", block):
         return BlockType.CODE
     if re.match(r"^>", block):
         return BlockType.QUOTE
     if all(map(lambda line: bool(re.match(r"- ", line)), block.split("\n"))):
         return BlockType.UNORDERED_LIST
-    
+     
     numbers_list = [re.match(r"[0-9]+\. ", line) for line in block.split("\n")]
     if all(numbers_list):
         casted_numbers = list(map(lambda match: float(match.group(0)), numbers_list))
@@ -155,3 +157,40 @@ def block_to_block_type(block:str) -> BlockType:
     
     return BlockType.PARAGRAPH
     
+def markdown_to_html_node(markdown:str) -> HTMLNode:
+    blocks = markdown_to_blocks(markdown)
+    pairs = [(block, block_to_block_type(block)) for block in blocks]
+    nodes = [block_to_node(pair) for pair in pairs]
+
+    return ParentNode('div', nodes)
+
+
+def block_to_node(pair:(str, BlockType)) -> HTMLNode:
+    match pair[1]:
+        case BlockType.PARAGRAPH:
+            return ParentNode('p', list(map(text_node_to_html_node, text_to_textnodes(normalize_text(pair[0])))))
+        case BlockType.CODE:
+            text = re.findall(r"^```([\s\S]*?)```$", pair[0])[0].lstrip()
+
+            return ParentNode('pre', [LeafNode('code', text)])
+        case BlockType.QUOTE:
+            return LeafNode('blockquote', pair[0][1:])
+        case BlockType.HEADING:
+            header = re.findall(r"^(#{1,6})", pair[0])[0]
+            text = re.sub(r"^#{1,6}\s+", "", pair[0]).strip() 
+
+            return LeafNode(f'h{len(header)}', text)
+        case BlockType.UNORDERED_LIST:
+            items = [item[2:] for item in pair[0].splitlines()]
+            return ParentNode('ul', [LeafNode('li', item) for item in items])
+        case BlockType.ORDERED_LIST:
+            items = [re.sub(r"^[0-9]+\.\s", '', item) for item in pair[0].splitlines()]
+
+            return ParentNode('ol', [LeafNode('li', item) for item in items])
+
+        
+    return HTMLNode()
+
+def normalize_text(text:str) -> str:
+    return ' '.join([line.strip() for line in text.strip().splitlines()])
+
