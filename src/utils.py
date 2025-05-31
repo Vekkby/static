@@ -134,8 +134,8 @@ def block_to_block_type(block:str) -> BlockType:
     if re.match(r"^(#{1,6})\s+(.*)$", block):
         return BlockType.HEADING
     if re.match(r"^```[\s\S]*?```$", block):
-        return BlockType.CODE
-    if re.match(r"^>", block):
+        return BlockType.CODE 
+    if all(map(lambda line: bool(re.match(r"\>", line)), block.split("\n"))):
         return BlockType.QUOTE
     if all(map(lambda line: bool(re.match(r"- ", line)), block.split("\n"))):
         return BlockType.UNORDERED_LIST
@@ -174,19 +174,21 @@ def block_to_node(pair:(str, BlockType)) -> HTMLNode:
 
             return ParentNode('pre', [LeafNode('code', text)])
         case BlockType.QUOTE:
-            return LeafNode('blockquote', pair[0][1:])
+            
+            return ParentNode('blockquote', list(map(text_node_to_html_node, text_to_textnodes(pair[0].replace('>', '').strip()))))
         case BlockType.HEADING:
             header = re.findall(r"^(#{1,6})", pair[0])[0]
             text = re.sub(r"^#{1,6}\s+", "", pair[0]).strip() 
 
             return LeafNode(f'h{len(header)}', text)
         case BlockType.UNORDERED_LIST:
-            items = [item[2:] for item in pair[0].splitlines()]
-            return ParentNode('ul', [LeafNode('li', (item)) for item in items])
+            items = [item[2:] for item in pair[0].splitlines()]  
+
+            return ParentNode('ul', [ParentNode('li', [text_node_to_html_node(node) for node in text_to_textnodes(item)]) for item in items])
         case BlockType.ORDERED_LIST:
             items = [re.sub(r"^[0-9]+\.\s", '', item) for item in pair[0].splitlines()]
 
-            return ParentNode('ol', [LeafNode('li', item) for item in items])
+            return ParentNode('ol', [ParentNode('li', [text_node_to_html_node(node) for node in text_to_textnodes(item)]) for item in items])
 
         
     return HTMLNode()

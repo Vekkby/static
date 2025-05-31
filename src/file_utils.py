@@ -44,3 +44,11 @@ def generate_page(from_path, template_path, dest_path):
 
     with open(dest_path, "w") as f:
         f.write(result)
+
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    sources = [os.path.join(dirpath, f) for (dirpath, dirnames, filenames) in os.walk(dir_path_content) for f in filenames]
+    destinations = [path.replace(dir_path_content, dest_dir_path).replace('.md', '.html') for path in sources]
+
+    for pair in zip(sources, destinations):
+        generate_page(pair[0], template_path, pair[1])
+    

@@ -289,19 +289,19 @@ the **same** even with inline stuff
 - First item
 - Second item
 - Third item
-- Fourth item 
+- Fourth `item`
 """
         node = markdown_to_html_node(md)
         html = node.to_html()
         
         self.assertEqual(
             html,
-            "<div><ul><li>First item</li><li>Second item</li><li>Third item</li><li>Fourth item</li></ul></div>",
+            "<div><ul><li>First item</li><li>Second item</li><li>Third item</li><li>Fourth <code>item</code></li></ul></div>",
         ) 
     def test_olist(self):
         md = """
-1. First item
-2. Second item
+1. First _item_
+2. Second **item**
 3. Third item
 4. Fourth item 
 """
@@ -310,7 +310,7 @@ the **same** even with inline stuff
         
         self.assertEqual(
             html,
-            "<div><ol><li>First item</li><li>Second item</li><li>Third item</li><li>Fourth item</li></ol></div>",
+            "<div><ol><li>First <i>item</i></li><li>Second <b>item</b></li><li>Third item</li><li>Fourth item</li></ol></div>",
         ) 
  
     def test_title(self):
@@ -321,6 +321,20 @@ the **same** even with inline stuff
     def test_no_title(self):
         md = '## Hello'
         self.assertRaises(ValueError, extract_title, md) 
+
+    def test_quote(self):
+        md = """
+> Dorothy followed her through many of the beautiful rooms in her castle.
+> The Witch bade her clean the pots and kettles and sweep the floor and keep the fire fed with wood.
+"""
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        
+        self.assertEqual(
+            html,
+            "<div><blockquote>Dorothy followed her through many of the beautiful rooms in her castle.\n The Witch bade her clean the pots and kettles and sweep the floor and keep the fire fed with wood.</blockquote></div>",
+        ) 
 
 if __name__ == "__main__":
     unittest.main()

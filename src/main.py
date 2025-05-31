@@ -6,7 +6,7 @@ PATH_TO_STATIC='./static'
 def main():
     recreate_directory(PATH_TO_PUBLIC)
     copy_dir(PATH_TO_STATIC, PATH_TO_PUBLIC)
-    generate_page('content/index.md', 'template.html', 'public/index.html')
+    generate_pages_recursive('content', 'template.html', 'public')
 
 
 
